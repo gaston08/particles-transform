@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler";
 import * as TWEEN from '@tweenjs/tween.js';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 let buttonsCtn = document.getElementById('buttons');
 for (let i = 0; i < buttonsCtn.children.length; i++) {
@@ -25,6 +26,16 @@ function changeGeometry(e) {
     case 'torusknot':
       instStart = instFinish;
       instFinish = instTorusKnot;
+      tween.start();
+      break;
+    case 'man':
+      instStart = instFinish;
+      instFinish = instMan;
+      tween.start();
+      break;
+    case 'earth':
+      instStart = instFinish;
+      instFinish = instEarth;
       tween.start();
       break;
     default:
@@ -51,9 +62,12 @@ scene.add(light, new THREE.AmbientLight(0xffffff, 0.5));
 let instStart = [];
 let instFinish = [];
 let instancedMesh;
+
 let instBox = [];
 let instSphere = [];
 let instTorusKnot = [];
+let instMan = [];
+let instEarth = [];
 
 let samplerSphere = new MeshSurfaceSampler(new THREE.Mesh(new THREE.SphereGeometry(1))).build();
 let samplerBox = new MeshSurfaceSampler(new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2))).build();
@@ -85,6 +99,49 @@ for (let idx = 0; idx < MAX_COUNT; idx++) {
   d.updateMatrix();
   instancedMesh.setMatrixAt(idx, d.matrix);
 };
+
+const loader = new GLTFLoader();
+loader.load('man.glb', function(gltf) {
+  const model = gltf.scene.children[0];
+  model.matrix.makeScale(10, 10, 10);
+  model.geometry.applyMatrix4(model.matrix);
+
+  model.matrix.makeTranslation(0, -0.5, 0);
+  model.geometry.applyMatrix4(model.matrix);
+
+  const sampler = new MeshSurfaceSampler(model).build();
+  const tempPosition = new THREE.Vector3();
+
+  for (let i = 0; i < MAX_COUNT; i++) {
+    sampler.sample(tempPosition);
+    instMan.push({
+      x: tempPosition.x,
+      y: tempPosition.y,
+      z: tempPosition.z
+    });
+  }
+});
+
+loader.load('earth.glb', function(gltf) {
+  const model = gltf.scene.children[0];
+  model.matrix.makeScale(10, 10, 10);
+  model.geometry.applyMatrix4(model.matrix);
+
+  model.matrix.makeTranslation(0, -0.5, 0);
+  model.geometry.applyMatrix4(model.matrix);
+
+  const sampler = new MeshSurfaceSampler(model).build();
+  const tempPosition = new THREE.Vector3();
+
+  for (let i = 0; i < MAX_COUNT; i++) {
+    sampler.sample(tempPosition);
+    instEarth.push({
+      x: tempPosition.x,
+      y: tempPosition.y,
+      z: tempPosition.z
+    });
+  }
+});
 
 instStart = instTorusKnot;
 instFinish = instTorusKnot;
