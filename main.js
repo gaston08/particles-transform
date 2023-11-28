@@ -4,6 +4,7 @@ import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler";
 import * as TWEEN from '@tweenjs/tween.js';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 const draco = new DRACOLoader();
 draco.setDecoderPath('draco/gltf/');
@@ -38,9 +39,9 @@ function changeGeometry(e) {
       instFinish = instMan;
       tween.start();
       break;
-    case 'bolt-and-nut':
+    case 'chainsaw':
       instStart = instFinish;
-      instFinish = instEarth;
+      instFinish = instChainsaw;
       tween.start();
       break;
     default:
@@ -72,7 +73,7 @@ let instBox = [];
 let instSphere = [];
 let instTorusKnot = [];
 let instMan = [];
-let instEarth = [];
+let instChainsaw = [];
 
 let samplerSphere = new MeshSurfaceSampler(new THREE.Mesh(new THREE.SphereGeometry(1))).build();
 let samplerBox = new MeshSurfaceSampler(new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2))).build();
@@ -109,7 +110,6 @@ const loader = new GLTFLoader();
 loader.setDRACOLoader(draco);
 
 loader.load('man.glb', function (gltf) {
-  console.log("MAN")
   const model = gltf.scene.children[0];
   model.matrix.makeScale(10, 10, 10);
   model.geometry.applyMatrix4(model.matrix);
@@ -130,13 +130,29 @@ loader.load('man.glb', function (gltf) {
   }
 });
 
-loader.load('bolt-and-nut.glb', function (gltf) {
-  console.log("BOLT")
-  const model = gltf.scene.children[0];
-  model.matrix.makeScale(0.003, 0.003, 0.003);
+function getMeshWithGeometryFromModel(model) {
+  console.log("1")
+  console.log(model)
+  if (model.geometry) {
+    console.log("2")
+    return model;
+  } else {
+    const geometries = model.children.map(m => m.geometry);
+    const geometry = BufferGeometryUtils.mergeGeometries(geometries);
+
+    const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const mesh = new THREE.Mesh(geometry, material);
+    return mesh;
+  }
+}
+
+loader.load('single.glb', function (gltf) {
+  const model = getMeshWithGeometryFromModel(gltf.scene.children[0]);
+  
+  model.matrix.makeScale(0.3, 0.3, 0.3);
   model.geometry.applyMatrix4(model.matrix);
 
-  model.matrix.makeTranslation(0, 0.5, 0);
+  model.matrix.makeTranslation(0, -0.5, 0);
   model.geometry.applyMatrix4(model.matrix);
 
   const sampler = new MeshSurfaceSampler(model).build();
@@ -144,7 +160,7 @@ loader.load('bolt-and-nut.glb', function (gltf) {
 
   for (let i = 0; i < MAX_COUNT; i++) {
     sampler.sample(tempPosition);
-    instEarth.push({
+    instChainsaw.push({
       x: tempPosition.x,
       y: tempPosition.y,
       z: tempPosition.z
