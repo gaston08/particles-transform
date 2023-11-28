@@ -3,6 +3,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler";
 import * as TWEEN from '@tweenjs/tween.js';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+
+const draco = new DRACOLoader();
+draco.setDecoderPath('draco/gltf/');
+draco.setDecoderConfig({ type: 'js' });
 
 let buttonsCtn = document.getElementById('buttons');
 for (let i = 0; i < buttonsCtn.children.length; i++) {
@@ -33,7 +38,7 @@ function changeGeometry(e) {
       instFinish = instMan;
       tween.start();
       break;
-    case 'earth':
+    case 'bolt-and-nut':
       instStart = instFinish;
       instFinish = instEarth;
       tween.start();
@@ -101,7 +106,10 @@ for (let idx = 0; idx < MAX_COUNT; idx++) {
 };
 
 const loader = new GLTFLoader();
-loader.load('man.glb', function(gltf) {
+loader.setDRACOLoader(draco);
+
+loader.load('man.glb', function (gltf) {
+  console.log("MAN")
   const model = gltf.scene.children[0];
   model.matrix.makeScale(10, 10, 10);
   model.geometry.applyMatrix4(model.matrix);
@@ -122,12 +130,13 @@ loader.load('man.glb', function(gltf) {
   }
 });
 
-loader.load('earth.glb', function(gltf) {
+loader.load('bolt-and-nut.glb', function (gltf) {
+  console.log("BOLT")
   const model = gltf.scene.children[0];
-  model.matrix.makeScale(10, 10, 10);
+  model.matrix.makeScale(0.003, 0.003, 0.003);
   model.geometry.applyMatrix4(model.matrix);
 
-  model.matrix.makeTranslation(0, -0.5, 0);
+  model.matrix.makeTranslation(0, 0.5, 0);
   model.geometry.applyMatrix4(model.matrix);
 
   const sampler = new MeshSurfaceSampler(model).build();
@@ -141,7 +150,14 @@ loader.load('earth.glb', function(gltf) {
       z: tempPosition.z
     });
   }
-});
+},
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+  },
+  function (error) {
+    console.log('An error happened');
+    console.log(error)
+  });
 
 instStart = instTorusKnot;
 instFinish = instTorusKnot;
